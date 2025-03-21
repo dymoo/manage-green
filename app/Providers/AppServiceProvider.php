@@ -24,5 +24,9 @@ class AppServiceProvider extends ServiceProvider
         Route::get('/admin/tenants', function () {
             return redirect('/admin');
         })->name('filament.admin.pages.tenants');
+
+        if ($this->app->environment('production')) {
+            \URL::forceScheme('https');
+        }
     }
 }
