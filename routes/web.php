@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use Illuminate\Support\Facades\Redirect;
+use App\Models\Tenant;
+use App\Filament\Pages\Tenancy\TenantUserRegister;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,9 +21,23 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+// Redirect users to tenant panel upon login if they have access to tenants
+Route::get('/dashboard', function () {
+    $user = auth()->user();
+    
+    if ($user && $user->tenants()->exists()) {
+        $tenant = $user->tenants()->first();
+        return redirect("/admin/tenants/{$tenant->slug}");
+    }
+    
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+// Tenant-specific routes
+Route::prefix('{tenant}')->middleware(['web'])->group(function () {
+    // Use the TenantUserRegister Filament page
+    Route::get('/register', TenantUserRegister::class)->name('tenant.register');
+});
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');

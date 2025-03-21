@@ -16,6 +16,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 class User extends Authenticatable implements FilamentUser, HasTenants, HasDefaultTenant
 {
@@ -134,5 +135,38 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasDefau
         }
         
         return false;
+    }
+    
+    /**
+     * Create a new user and assign it to a tenant with the default 'user' role.
+     *
+     * @param array $attributes User attributes
+     * @param Tenant|null $tenant Tenant to assign the user to
+     * @return self
+     */
+    public static function registerUser(array $attributes, ?Tenant $tenant = null): self
+    {
+        // Create the user
+        $user = static::create([
+            'name' => $attributes['name'],
+            'email' => $attributes['email'],
+            'password' => $attributes['password'],
+        ]);
+        
+        // If a tenant is provided, assign the user to it with the 'user' role
+        if ($tenant) {
+            $user->tenants()->attach($tenant);
+            
+            // Get or create the 'user' role for this tenant
+            $role = Role::firstOrCreate(
+                ['name' => 'user', 'tenant_id' => $tenant->id],
+                ['guard_name' => 'web']
+            );
+            
+            // Assign the role to the user
+            $user->assignRole($role);
+        }
+        
+        return $user;
     }
 }

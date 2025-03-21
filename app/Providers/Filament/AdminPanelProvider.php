@@ -87,6 +87,9 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->tenantMenu(function () {
                 return true;
-            });
+            })
+            ->login()
+            ->registration(false)
+            ->passwordReset();
     }
 }
