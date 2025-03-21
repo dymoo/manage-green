@@ -6,6 +6,7 @@ namespace App\Models;
 use App\Traits\HasTenantPermissions;
 use Filament\Facades\Filament;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasDefaultTenant;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,7 +17,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-class User extends Authenticatable implements FilamentUser, HasTenants
+class User extends Authenticatable implements FilamentUser, HasTenants, HasDefaultTenant
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasTenantPermissions;
@@ -79,6 +80,11 @@ class User extends Authenticatable implements FilamentUser, HasTenants
      */
     public function getTenants(Panel $panel): Collection
     {
+        // For super admins, return all tenants
+        if ($this->hasRole('super_admin')) {
+            return Tenant::all();
+        }
+        
         return $this->tenants;
     }
 
@@ -87,7 +93,30 @@ class User extends Authenticatable implements FilamentUser, HasTenants
      */
     public function canAccessTenant(Model $tenant): bool
     {
+        // Super admins can access any tenant
+        if ($this->hasRole('super_admin')) {
+            return true;
+        }
+        
         return $this->tenants()->whereKey($tenant->getKey())->exists();
+    }
+    
+    /**
+     * Get the default tenant for the user.
+     */
+    public function getDefaultTenant(Panel $panel): ?Model
+    {
+        // For super admins, prioritize the "manage-green" tenant if it exists
+        if ($this->hasRole('super_admin')) {
+            $defaultTenant = Tenant::where('slug', 'manage-green')->first();
+            
+            if ($defaultTenant && $this->canAccessTenant($defaultTenant)) {
+                return $defaultTenant;
+            }
+        }
+        
+        // Otherwise, return the first tenant they have access to
+        return $this->tenants()->first();
     }
     
     /**

@@ -77,5 +77,8 @@ class DatabaseSeeder extends Seeder
         $admin->assignRole('admin', $tenant);
         $staff->assignRole('staff', $tenant);
         $member->assignRole('member', $tenant);
+        
+        // Create the default "manage-green" tenant for super admins
+        $this->call(DefaultTenantSeeder::class);
     }
 }

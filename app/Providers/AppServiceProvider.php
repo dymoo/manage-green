@@ -20,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Add a custom route to handle the missing "filament.admin.pages.tenants" route
+        // Add back the redirection for tenants
         Route::get('/admin/tenants', function () {
             return redirect('/admin');
         })->name('filament.admin.pages.tenants');

@@ -18,6 +18,7 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
+use Filament\Facades\Filament;
 
 class Tenants extends Page implements HasTable
 {
@@ -27,72 +28,67 @@ class Tenants extends Page implements HasTable
 
     protected static string $view = 'filament.pages.tenants';
 
-    protected static ?string $navigationLabel = 'Tenants';
+    protected static ?string $navigationLabel = 'Organization Settings';
 
-    protected static ?string $title = 'Tenants';
+    protected static ?string $title = 'Organization Settings';
 
-    protected static ?int $navigationSort = -1;
+    protected static ?int $navigationSort = 100;
 
-    protected ?string $heading = 'Manage Tenants';
+    protected ?string $heading = 'Organization Settings';
     
-    protected static ?string $slug = 'tenants';
+    protected static ?string $slug = 'organization-settings';
 
-    protected static string $routeAlias = 'tenants';
+    // Configure this as a tenant page
+    protected static bool $isTenantPage = true;
+    
+    public static function canAccess(): bool
+    {
+        // Only allow access to admin users within the tenant
+        if (!Filament::getTenant()) {
+            return false;
+        }
+        
+        return auth()->user()->hasRole(['admin', 'super_admin'], Filament::getTenant());
+    }
 
     public function table(Table $table): Table
     {
+        $currentTenant = Filament::getTenant();
+        
+        // We're just displaying the current tenant details
         return $table
             ->query(
-                Tenant::query()
-                    ->whereRelation('users', 'user_id', auth()->id())
+                Tenant::query()->where('id', $currentTenant->id)
             )
             ->columns([
                 TextColumn::make('name')
+                    ->label('Organization Name')
                     ->searchable(),
                 TextColumn::make('slug')
+                    ->label('Organization ID')
                     ->searchable(),
                 TextColumn::make('created_at')
+                    ->label('Created Date')
                     ->dateTime()
                     ->sortable(),
             ])
             ->actions([
+                // Edit action for current tenant
                 EditAction::make()
+                    ->label('Update Settings')
                     ->form([
                         TextInput::make('name')
+                            ->label('Organization Name')
                             ->required()
-                            ->maxLength(255)
-                            ->live(onBlur: true)
-                            ->afterStateUpdated(function (string $state, $set) {
-                                $set('slug', Str::slug($state));
-                            }),
-                        TextInput::make('slug')
-                            ->required()
-                            ->maxLength(255)
-                            ->unique(ignoreRecord: true),
+                            ->maxLength(255),
                     ]),
-                DeleteAction::make(),
             ])
-            ->headerActions([
-                CreateAction::make()
-                    ->form([
-                        TextInput::make('name')
-                            ->required()
-                            ->maxLength(255)
-                            ->live(onBlur: true)
-                            ->afterStateUpdated(function (string $state, $set) {
-                                $set('slug', Str::slug($state));
-                            }),
-                        TextInput::make('slug')
-                            ->required()
-                            ->maxLength(255)
-                            ->unique(),
-                    ])
-                    ->using(function (array $data): Tenant {
-                        $tenant = Tenant::create($data);
-                        $tenant->users()->attach(auth()->user());
-                        
-                        return $tenant;
-                    }),
-            ]);
+            // Remove header actions as we don't want to create new tenants from here
+            ->headerActions([]);
+    }
+    
+    public function getSubNavigation(): array
+    {
+        return [];
     }
 } 

@@ -18,6 +18,9 @@ class ProductCategoryResource extends Resource
     protected static ?string $model = ProductCategory::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    
+    // Define the tenant relationship name
+    protected static ?string $tenantOwnershipRelationshipName = 'tenant';
 
     public static function form(Form $form): Form
     {

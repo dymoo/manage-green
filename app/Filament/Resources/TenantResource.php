@@ -16,6 +16,20 @@ class TenantResource extends Resource
     protected static ?string $model = Tenant::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
+    
+    protected static ?string $navigationGroup = 'System';
+    
+    protected static ?int $navigationSort = 100;
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
+    public static function canAccess(): bool
+    {
+        return auth()->user()->hasRole('super_admin');
+    }
 
     public static function form(Form $form): Form
     {

@@ -4,11 +4,11 @@ We are building a member management club software for legal cannabis clubs prima
 
 ## context on our stack
 
--   laravel v12
--   filament for panel building
+-   laravel v12 [https://laravel.com/docs/12.x/](laravel v12 docs)
+-   filament for panel building [https://filamentphp.com/docs](filament documentation)
 -   liveview
 -   tailwindcss / flux (default to flux components when you can)
--   multitennancy through filaments built in multitennancy set up
+-   multitennancy through filaments built in multitennancy set up [https://filamentphp.com/docs/3.x/panels/tenancy](filament multitenancy docs)
 -   deployed to digitalocean app platform with postgresql v17, we want to keep our deployment costs as low as possible.
 -   we are running postgres in prod and sqlite in dev.
 -   We are running in a machine with 512mb of ram, when you are doing something that may run into ram constraints, please notify me and suggest an alternative.
@@ -26,19 +26,19 @@ Currently, here is our MVP checklist. I will check off tasks that have been comp
 -   [x] Install Laravel & Filament Admin Panel
 -   [x] Install & configure a multi-tenancy package
 -   [x] Set up tenant identification (subdomains, custom domains, or organization-based)
--   [ ] Implement a global super admin role (to manage multiple clubs)
--   [ ] Implement tenant creation flow (new clubs can register & get their own isolated data)
+-   [x] Implement a global super admin role (to manage multiple clubs)
+-   [x] Implement tenant creation flow (new clubs can register & get their own isolated data)
 
 ### 2. Tenant-Specific Data Handling
 
--   [ ] Ensure database separation for each club (either separate DBs or row-based tenancy)
--   [ ] Implement automatic migrations & seeders per tenant
--   [ ] Set up tenant-aware authentication (staff & members only see their club’s data)
--   [ ] Secure queries using scoped models (to prevent cross-club access)
+-   [x] Ensure database separation for each club
+-   [x] Implement automatic migrations & seeders per tenant
+-   [x] Set up tenant-aware authentication (staff & members only see their club’s data)
+-   [x] Secure queries using scoped models (to prevent cross-club access)
 
 ## Phase 2: Club & Member Management
 
-### 1. Tenant (Club) Onboarding
+### 1. Tenant (Club) Onboarding (SKIPPED)
 
 -   [ ] Club owner signs up & creates their cannabis club
 -   [ ] Assign club-specific custom settings (branding, pricing, inventory rules)
