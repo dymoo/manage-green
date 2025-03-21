@@ -40,16 +40,14 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
-                TenantsOverview::class,
             ])
             ->navigationItems([
-                NavigationItem::make('Tenants Management')
+                NavigationItem::make('Tenants')
                     ->url(fn (): string => TenantsOverview::getUrl())
                     ->icon('heroicon-o-building-library')
                     ->activeIcon('heroicon-s-building-library')
                     ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.tenants-overview'))
                     ->sort(2)
-                    // Only show this navigation item to super_admin users
                     ->visible(fn (): bool => auth()->user()?->hasRole('super_admin') ?? false),
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')

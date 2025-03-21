@@ -3,9 +3,9 @@
 namespace App\Filament\Pages;
 
 use App\Models\Tenant;
-use Filament\Actions\CreateAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Pages\Page;
+use Filament\Tables\Actions\CreateAction;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
@@ -84,7 +84,7 @@ class TenantsOverview extends Page implements HasTable
             ])
             ->headerActions([
                 // Create new tenant
-                CreateAction::make()
+                \Filament\Tables\Actions\CreateAction::make()
                     ->form([
                         TextInput::make('name')
                             ->required()
