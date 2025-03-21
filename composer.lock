@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2c5ad39ec5389f702b49ff670d53e452",
+    "content-hash": "439bfe502698423f7cd21e02c00d1c4d",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -350,86 +350,6 @@
                 }
             ],
             "time": "2024-02-09T16:56:22+00:00"
-        },
-        {
-            "name": "coconutcraig/laravel-postmark",
-            "version": "v3.3.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/craigpaul/laravel-postmark.git",
-                "reference": "6786799fe0c784b05a48974fd030468fa7da33e0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/craigpaul/laravel-postmark/zipball/6786799fe0c784b05a48974fd030468fa7da33e0",
-                "reference": "6786799fe0c784b05a48974fd030468fa7da33e0",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "guzzlehttp/guzzle": "^7.0",
-                "illuminate/mail": "^10.0|^11.0|^12.0",
-                "illuminate/support": "^10.0|^11.0|^12.0",
-                "php": "^8.1"
-            },
-            "require-dev": {
-                "ext-gd": "*",
-                "fakerphp/faker": "^1.17",
-                "orchestra/testbench": "^8.0|^9.0|^10.0",
-                "phpunit/phpunit": "^10.0|^11.5.3"
-            },
-            "suggest": {
-                "mvdnbrk/postmark-inbound": "Allows you to process Postmark Inbound Webhooks."
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "CraigPaul\\Mail\\PostmarkServiceProvider"
-                    ]
-                },
-                "branch-alias": {
-                    "dev-master": "3.0-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "CraigPaul\\Mail\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Craig Paul",
-                    "email": "craig.paul@coconutsoftware.com",
-                    "homepage": "https://www.coconutsoftware.com/",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Laravel package for sending mail via the Postmark API",
-            "homepage": "https://github.com/craigpaul/laravel-postmark",
-            "keywords": [
-                "coconutcraig",
-                "email",
-                "laravel",
-                "mail",
-                "postmark",
-                "wildbit"
-            ],
-            "support": {
-                "issues": "https://github.com/craigpaul/laravel-postmark/issues",
-                "source": "https://github.com/craigpaul/laravel-postmark/tree/v3.3.0"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/mvdnbrk",
-                    "type": "github"
-                }
-            ],
-            "time": "2025-02-18T11:09:44+00:00"
         },
         {
             "name": "danharrin/date-format-converter",
@@ -6900,6 +6820,76 @@
                 }
             ],
             "time": "2024-09-09T11:45:10+00:00"
+        },
+        {
+            "name": "symfony/postmark-mailer",
+            "version": "v7.2.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/postmark-mailer.git",
+                "reference": "d11c8ce0ff5974a2ee4a9a3297ba89ecdf6d1952"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/postmark-mailer/zipball/d11c8ce0ff5974a2ee4a9a3297ba89ecdf6d1952",
+                "reference": "d11c8ce0ff5974a2ee4a9a3297ba89ecdf6d1952",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.2",
+                "psr/event-dispatcher": "^1",
+                "symfony/mailer": "^7.2"
+            },
+            "conflict": {
+                "symfony/http-foundation": "<6.4"
+            },
+            "require-dev": {
+                "symfony/http-client": "^6.4|^7.0",
+                "symfony/webhook": "^6.4|^7.0"
+            },
+            "type": "symfony-mailer-bridge",
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\Mailer\\Bridge\\Postmark\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony Postmark Mailer Bridge",
+            "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/postmark-mailer/tree/v7.2.4"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2025-02-26T08:19:39+00:00"
         },
         {
             "name": "symfony/process",
