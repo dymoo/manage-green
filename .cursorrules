@@ -1,0 +1,157 @@
+# what are we achieving
+
+We are building a member management club software for legal cannabis clubs primarily primarily in europe
+
+## context on our stack
+
+-   laravel v12
+-   filament for panel building
+-   liveview
+-   tailwindcss / flux (default to flux components when you can)
+-   multitennancy through filaments built in multitennancy set up
+-   deployed to digitalocean app platform with postgresql v17, we want to keep our deployment costs as low as possible.
+-   we are running postgres in prod and sqlite in dev.
+-   We are running in a machine with 512mb of ram, when you are doing something that may run into ram constraints, please notify me and suggest an alternative.
+
+# MVP requirements
+
+as we are currently in the process of building an MVP we'd like to keep our scope relatively small but make sure our codebase wont have too many problems moving forward as our scope expands.
+
+Currently, here is our MVP checklist. I will check off tasks that have been completed.
+
+## Phase 1: Multi-Tenant System Setup
+
+### 1. Laravel & Filament Base Setup
+
+-   [x] Install Laravel & Filament Admin Panel
+-   [x] Install & configure a multi-tenancy package
+-   [x] Set up tenant identification (subdomains, custom domains, or organization-based)
+-   [ ] Implement a global super admin role (to manage multiple clubs)
+-   [ ] Implement tenant creation flow (new clubs can register & get their own isolated data)
+
+### 2. Tenant-Specific Data Handling
+
+-   [ ] Ensure database separation for each club (either separate DBs or row-based tenancy)
+-   [ ] Implement automatic migrations & seeders per tenant
+-   [ ] Set up tenant-aware authentication (staff & members only see their club’s data)
+-   [ ] Secure queries using scoped models (to prevent cross-club access)
+
+## Phase 2: Club & Member Management
+
+### 1. Tenant (Club) Onboarding
+
+-   [ ] Club owner signs up & creates their cannabis club
+-   [ ] Assign club-specific custom settings (branding, pricing, inventory rules)
+-   [ ] Enable domain mapping (each club can have a custom subdomain/domain)
+
+### 2. Member & Staff Management
+
+-   [ ] Club admins can invite staff
+-   [ ] Implement role-based permissions (Admin, Staff, Member)
+-   [ ] Member registration (by staff or self-signup with approval)
+-   [ ] Assign FOB ID or unique identifier to members
+-   [ ] Implement member wallet (preload funds, track purchases)
+
+## Phase 3: Inventory & POS
+
+### 1. Stock Control (Per-Tenant)
+
+-   [ ] Each club manages its own inventory
+-   [ ] Implement daily staff stock check-in & check-out
+-   [ ] Track inventory weight discrepancies per day
+-   [ ] Display real-time stock levels
+
+### 2. Point of Sale (POS)
+
+-   [ ] Staff logs in → Selects member (via FOB scan or search)
+-   [ ] Choose product → Enter weight from scale → Deduct stock
+-   [ ] Deduct balance from member’s preloaded funds
+-   [ ] Log transaction for reporting
+
+### Phase 4: Reporting & Analytics
+
+-   [ ] Generate daily sales reports per club
+-   [ ] Track weight discrepancies per staff member
+-   [ ] Implement multi-club analytics for super admin
+-   [ ] Staff transaction logs (who sold what, when)
+
+### Phase 5: Data Migration & External Integrations
+
+#### 1. Migrating Existing Clubs
+
+-   [ ] Build a CSV Import Tool (import members, inventory, transactions)
+-   [ ] Allow data mapping for smooth migration
+-   [ ] Enable clubs to migrate without data loss
+
+### 2. API & Webhooks
+
+-   [ ] Add Webhook Support (for external accounting, CRM tools)
+-   [ ] Implement a public API (for clubs that want integrations)
+
+## Bonus: Future Enhancements
+
+-   [ ] Custom Branding (each club can have its own theme/logo)
+-   [ ] Automated Subscriptions (billing per club via Stripe)
+-   [ ] AI-Powered Sales Insights (which products sell best per location)
+
+## Rough site structure
+
+## base domain
+
+/ - landing page for our product
+/admin -- Only superusers can access this
+/register -- Registers are invite only for our base domain
+
+## Tennant domain (subdomain by default but if client requests we can have their own domain)
+
+/ - tenant landing page
+/register - registering for tenants admin, staff, users (scoped to tenant)
+/login - login for tenant users
+
+# Roles
+
+## Global super-admin
+
+-   Has access to /admin on base domain
+-   Has access to everything on tenant sites
+
+## Admin
+
+-   Tenant specific admin
+-   Has access to all resources on tenant specific site
+
+## Staff
+
+-   Tenant specific staff permissions, admins can change these but there are sane defaults
+
+## User
+
+-   This is a member of the club, they shouldn't have access to any admin / dashboards.
+-   They need the ability to sign up, receive emails, anything else thats relevant to a user of a club.
+
+# product context
+
+our product name is manage.green and our domain is https://manage.green
+
+we'd like localisation for most speaken languages in europe, we'd also like other languages like turkish for example because there are large amounts of turkish people living in europe, basically we'd like to localise to most relevant languages for our product.
+
+# project structure context
+
+make sure to use @workspace before assuming anything about our project structure.
+
+# context about me
+
+I am a programmer of 10 years experience, Mostly in JS/TS, I have very minimal experience with laravel. Please explain your reasoning and any edge cases that I may miss due to my lack of experience with laravel or any of the other tools in our stack.
+
+# html style advice
+
+we'd like consistent website styling across everything, when you have the ability to make colors, icons, components more consistent please do that. As a safe bet try to stick to laravels flux compoenent framework
+
+our primary color is tailwildcss'es "emerald-600"
+
+# additional advice
+
+-   Try not to be too cocky or overconfident in your responses.
+-   Make sure to keep your responses as long as is required to be useful, you don't have to output everything on your mind. only relevant information.
+-   Don't assume anything you don't absolutely know.
+-   You need to source your claims and assumptions.
