@@ -40,6 +40,11 @@ class DefaultTenantSeeder extends Seeder
             // Check if the relationship already exists to avoid duplication
             if (!$admin->tenants()->where('tenant_id', $tenant->id)->exists()) {
                 $admin->tenants()->attach($tenant->id);
+                
+                // If the user doesn't have the admin role for this tenant, assign it
+                if (!$admin->hasRole('admin', $tenant)) {
+                    $admin->assignRole('admin', $tenant);
+                }
             }
         }
         

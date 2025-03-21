@@ -19,55 +19,36 @@ class RolesAndPermissionsSeeder extends Seeder
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // Create permissions
-        // Tenant permissions
-        Permission::create(['name' => 'create_tenant']);
-        Permission::create(['name' => 'edit_tenant']);
-        Permission::create(['name' => 'delete_tenant']);
-        Permission::create(['name' => 'view_any_tenant']);
-        Permission::create(['name' => 'view_tenant']);
+        $permissions = [
+            // Tenant permissions
+            'create_tenant', 'edit_tenant', 'delete_tenant', 'view_any_tenant', 'view_tenant',
+            // User permissions
+            'create_user', 'edit_user', 'delete_user', 'view_any_user', 'view_user',
+            // Member permissions
+            'create_member', 'edit_member', 'delete_member', 'view_any_member', 'view_member',
+            // Inventory permissions
+            'create_inventory', 'edit_inventory', 'delete_inventory', 'view_any_inventory', 'view_inventory',
+            // Sales permissions
+            'create_sale', 'view_any_sale', 'view_sale',
+            // Report permissions
+            'view_reports', 'export_reports',
+        ];
 
-        // User permissions
-        Permission::create(['name' => 'create_user']);
-        Permission::create(['name' => 'edit_user']);
-        Permission::create(['name' => 'delete_user']);
-        Permission::create(['name' => 'view_any_user']);
-        Permission::create(['name' => 'view_user']);
+        // Create permissions if they don't exist
+        foreach ($permissions as $permission) {
+            Permission::findOrCreate($permission, 'web');
+        }
         
-        // Member permissions
-        Permission::create(['name' => 'create_member']);
-        Permission::create(['name' => 'edit_member']);
-        Permission::create(['name' => 'delete_member']);
-        Permission::create(['name' => 'view_any_member']);
-        Permission::create(['name' => 'view_member']);
+        // Check if roles exist before creating them
+        $superAdminRole = Role::firstOrCreate(['name' => 'super_admin', 'tenant_id' => null]);
+        $adminRole = Role::firstOrCreate(['name' => 'admin', 'tenant_id' => null]);
+        $staffRole = Role::firstOrCreate(['name' => 'staff', 'tenant_id' => null]);
+        $memberRole = Role::firstOrCreate(['name' => 'member', 'tenant_id' => null]);
         
-        // Inventory permissions
-        Permission::create(['name' => 'create_inventory']);
-        Permission::create(['name' => 'edit_inventory']);
-        Permission::create(['name' => 'delete_inventory']);
-        Permission::create(['name' => 'view_any_inventory']);
-        Permission::create(['name' => 'view_inventory']);
+        // Sync permissions for each role
+        $superAdminRole->syncPermissions(Permission::all());
         
-        // Sales permissions
-        Permission::create(['name' => 'create_sale']);
-        Permission::create(['name' => 'view_any_sale']);
-        Permission::create(['name' => 'view_sale']);
-        
-        // Report permissions
-        Permission::create(['name' => 'view_reports']);
-        Permission::create(['name' => 'export_reports']);
-
-        // Create global roles and assign permissions
-        
-        // Super Admin - has all permissions across all tenants
-        // This is a global role, not tenant-specific
-        $superAdminRole = Role::create(['name' => 'super_admin', 'tenant_id' => null]);
-        $superAdminRole->givePermissionTo(Permission::all());
-        
-        // Create tenant-specific roles (these will be assigned per tenant)
-        
-        // Admin - has all permissions within their tenant
-        $adminRole = Role::create(['name' => 'admin', 'tenant_id' => null]);
-        $adminRole->givePermissionTo([
+        $adminRole->syncPermissions([
             'edit_tenant', 'view_tenant',
             'create_user', 'edit_user', 'delete_user', 'view_any_user', 'view_user',
             'create_member', 'edit_member', 'delete_member', 'view_any_member', 'view_member',
@@ -76,9 +57,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_reports', 'export_reports',
         ]);
         
-        // Staff - limited permissions within their tenant
-        $staffRole = Role::create(['name' => 'staff', 'tenant_id' => null]);
-        $staffRole->givePermissionTo([
+        $staffRole->syncPermissions([
             'view_tenant',
             'view_any_user', 'view_user',
             'create_member', 'edit_member', 'view_any_member', 'view_member',
@@ -87,9 +66,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_reports',
         ]);
         
-        // Member - limited permissions within their tenant
-        $memberRole = Role::create(['name' => 'member', 'tenant_id' => null]);
-        $memberRole->givePermissionTo([
+        $memberRole->syncPermissions([
             'view_member',
         ]);
     }
