@@ -8,12 +8,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class WalletTransaction extends Model
 {
     protected $fillable = [
+        'tenant_id',
         'wallet_id',
+        'user_id',
         'order_id',
+        'staff_id',
         'amount',
         'type',
-        'payment_method',
-        'staff_id',
+        'balance_before',
+        'balance_after',
         'reference',
         'notes',
     ];

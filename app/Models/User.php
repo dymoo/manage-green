@@ -11,12 +11,17 @@ use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
+use App\Models\Wallet;
 
 class User extends Authenticatable implements FilamentUser, HasTenants, HasDefaultTenant
 {
@@ -32,6 +37,8 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasDefau
         'name',
         'email',
         'password',
+        'fob_id',
+        'tenant_id',
     ];
 
     /**
@@ -63,6 +70,14 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasDefau
     public function tenants(): BelongsToMany
     {
         return $this->belongsToMany(Tenant::class);
+    }
+
+    /**
+     * Get the owning tenant of this user record (if direct ownership exists).
+     */
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class, 'tenant_id');
     }
 
     /**
@@ -168,5 +183,77 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasDefau
         }
         
         return $user;
+    }
+
+    /**
+     * Get the user's wallet for the current tenant
+     */
+    public function wallet(): HasOne
+    {
+        return $this->hasOne(Wallet::class);
+    }
+    
+    /**
+     * Get all wallets across all tenants
+     */
+    public function wallets()
+    {
+        return $this->hasMany(Wallet::class);
+    }
+    
+    /**
+     * Get the wallet transactions for the user
+     */
+    public function walletTransactions()
+    {
+        return $this->hasManyThrough(
+            WalletTransaction::class,
+            Wallet::class,
+            'user_id',
+            'wallet_id'
+        );
+    }
+
+    /**
+     * Get the inventory transactions associated with the user.
+     */
+    public function inventoryTransactions(): HasMany
+    {
+        return $this->hasMany(InventoryTransaction::class, 'staff_id');
+    }
+    
+    /**
+     * Get the inventory adjustments (discrepancies) associated with the user (staff).
+     */
+    public function inventoryAdjustments(): HasMany
+    {
+        return $this->hasMany(InventoryTransaction::class, 'staff_id')
+                    ->where('type', 'adjustment');
+    }
+
+    /**
+     * Ensures that the user has a wallet, creating one if it doesn't exist.
+     *
+     * @return Wallet The user's wallet.
+     */
+    public function ensureWalletExists(): Wallet
+    {
+        // Use firstOrCreate on the HasOne relationship.
+        // The first array is for matching attributes (usually empty for HasOne as it's keyed by user_id).
+        // The second array is for attributes if the wallet needs to be created.
+        $wallet = $this->wallet()->firstOrCreate([], [
+            'balance' => 0, // Default balance, assumed to be in cents.
+            // If your Wallet model has a tenant_id, and it's not automatically
+            // handled by observers or model events based on the user, you might add:
+            // 'tenant_id' => $this->tenant_id,
+        ]);
+
+        // Ensure the relationship is loaded on the current model instance if it was just created
+        // and not already loaded.
+        if (!$this->relationLoaded('wallet')) {
+            $this->load('wallet');
+        }
+        
+        return $wallet;
     }
 }

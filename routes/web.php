@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use Illuminate\Support\Facades\Redirect;
 use App\Models\Tenant;
-use App\Filament\Pages\Tenancy\TenantUserRegister;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,8 +34,19 @@ Route::get('/dashboard', function () {
 
 // Tenant-specific routes
 Route::prefix('{tenant}')->middleware(['web'])->group(function () {
-    // Use the TenantUserRegister Filament page
-    Route::get('/register', TenantUserRegister::class)->name('tenant.register');
+    // Replace the TenantUserRegister with a closure that handles the tenant registration
+    Route::get('/register', function (string $tenant) {
+        // Validate the tenant exists
+        $tenant = Tenant::where('slug', $tenant)->firstOrFail();
+        
+        // If user is logged in and has access to this tenant, redirect to dashboard
+        if (auth()->check() && auth()->user()->tenants()->where('tenants.id', $tenant->id)->exists()) {
+            return redirect("/admin/tenants/{$tenant->slug}");
+        }
+        
+        // Create a regular registration form view for the tenant
+        return view('auth.tenant-register', ['tenant' => $tenant]);
+    })->name('tenant.register');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -51,5 +61,10 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/admin/tenants', function () {
     return Redirect::to('/admin/tenants-overview');
 });
+
+// Add a named route for login to satisfy the Authenticate middleware
+Route::get('/login', function () {
+    return redirect('/admin/login');
+})->name('login');
 
 require __DIR__.'/auth.php';

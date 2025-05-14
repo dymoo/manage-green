@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Builder;
+use Filament\Facades\Filament;
 
 class Order extends Model
 {
@@ -30,28 +32,45 @@ class Order extends Model
         'completed_at' => 'datetime',
     ];
     
-    // Boot method to auto-generate order number
-    protected static function boot()
+    protected static function booted(): void
     {
-        parent::boot();
-        
+        parent::booted();
+
+        static::addGlobalScope('tenant', function (Builder $builder) {
+            if ($currentTenant = Filament::getTenant()) {
+                $builder->where($builder->getModel()->getTable() . '.tenant_id', $currentTenant->getKey());
+            }
+        });
+
         static::creating(function ($order) {
+            if (!$order->tenant_id && ($currentTenant = Filament::getTenant())) {
+                $order->tenant_id = $currentTenant->getKey();
+            }
+            
             if (!$order->order_number) {
-                $order->order_number = static::generateOrderNumber($order->tenant_id);
+                $tenantIdForOrderNumber = $order->tenant_id ?: (Filament::getTenant() ? Filament::getTenant()->getKey() : null);
+                if ($tenantIdForOrderNumber) {
+                    $order->order_number = static::generateOrderNumber($tenantIdForOrderNumber);
+                } else {
+                    throw new \InvalidArgumentException('Cannot generate order number: Tenant ID could not be determined.');
+                }
             }
         });
     }
     
-    // Generate a unique order number
     public static function generateOrderNumber($tenantId)
     {
+        if (!$tenantId) {
+            throw new \InvalidArgumentException('Tenant ID is required to generate an order number.');
+        }
         $prefix = 'ORD-';
         $unique = false;
         $orderNumber = '';
         
         while (!$unique) {
             $orderNumber = $prefix . strtoupper(Str::random(8));
-            $exists = static::where('tenant_id', $tenantId)
+            $exists = static::withoutGlobalScope('tenant')
+                ->where('tenant_id', $tenantId)
                 ->where('order_number', $orderNumber)
                 ->exists();
                 
@@ -62,8 +81,6 @@ class Order extends Model
         
         return $orderNumber;
     }
-    
-    // Relationships
     
     public function tenant(): BelongsTo
     {
@@ -95,11 +112,10 @@ class Order extends Model
         return $this->hasMany(InventoryTransaction::class);
     }
     
-    // Scopes
-    
     public function scopeForTenant($query, $tenant)
     {
-        return $query->where('tenant_id', $tenant->id);
+        $tenantId = $tenant instanceof Model ? $tenant->getKey() : $tenant;
+        return $query->where($this->getTable() . '.tenant_id', $tenantId);
     }
     
     public function scopeByStatus($query, $status)

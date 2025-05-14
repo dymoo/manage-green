@@ -49,14 +49,20 @@ class ProductResource extends Resource
                             ->label('SKU')
                             ->unique(
                                 ignoreRecord: true,
-                                modifyRuleUsing: fn ($rule) => $rule->where('tenant_id', function() {
-                                    // Safely get tenant ID or null
+                                modifyRuleUsing: function (Unique $rule) {
+                                    $tenantIdToCompare = null;
                                     if (function_exists('tenant') && tenant()) {
-                                        return tenant()->id;
+                                        $tenantIdToCompare = tenant()->id;
+                                    } elseif (\Filament\Facades\Filament::getTenant()) {
+                                        $tenantIdToCompare = \Filament\Facades\Filament::getTenant()->id;
                                     }
-                                    // Return current tenant ID from the context
-                                    return \Filament\Facades\Filament::getTenant()?->id;
-                                })
+                                    // Ensure that a tenant_id is actually found. If not, this rule might not work as expected
+                                    // or it could lead to checking uniqueness where tenant_id is null.
+                                    // For robust tenant-scoped uniqueness, $tenantIdToCompare should not be null.
+                                    // If $tenantIdToCompare can be null and that's an invalid state for this rule,
+                                    // you might need to conditionally apply the rule or throw an exception.
+                                    return $rule->where('tenant_id', $tenantIdToCompare);
+                                }
                             )
                             ->maxLength(255),
                             
@@ -144,6 +150,7 @@ class ProductResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->poll('5s')
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()

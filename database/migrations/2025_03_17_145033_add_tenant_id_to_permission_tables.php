@@ -24,12 +24,20 @@ return new class extends Migration
 
         // Add tenant_id to model_has_roles pivot table
         Schema::table($tableNames['model_has_roles'], function (Blueprint $table) {
-            $table->foreignId('tenant_id')->nullable()->after('role_id');
+            // Define column type explicitly, then make nullable, then add constraint
+            $table->unsignedBigInteger('tenant_id')->after('role_id')->nullable(); 
+            // Add foreign key constraint separately
+            // Assuming the tenants table uses the default 'id' primary key
+            // We might need to specify the table name if Tenant model uses a different one
+            // $table->foreign('tenant_id')->references('id')->on('tenants')->nullOnDelete(); // Or cascade? Check requirements
         });
 
         // Add tenant_id to model_has_permissions pivot table
         Schema::table($tableNames['model_has_permissions'], function (Blueprint $table) {
-            $table->foreignId('tenant_id')->nullable()->after('permission_id');
+            // Define column type explicitly, then make nullable, then add constraint
+            $table->unsignedBigInteger('tenant_id')->after('permission_id')->nullable();
+            // Add foreign key constraint separately
+            // $table->foreign('tenant_id')->references('id')->on('tenants')->nullOnDelete();
         });
     }
 

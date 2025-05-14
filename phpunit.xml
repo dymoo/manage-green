@@ -19,15 +19,20 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <env name="APP_KEY" value="base64:x3VKwb6wb0gE3NaznmLq3Y7Ea4RKJYWhHo2MYweu478="/><!-- Updated APP_KEY -->
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_STORE" value="array"/>
-        <env name="DB_CONNECTION" value="sqlite"/>
-        <env name="DB_DATABASE" value=":memory:"/>
+        <!-- <env name="DB_CONNECTION" value="sqlite"/> -->
+        <!-- <env name="DB_DATABASE" value=":memory:"/> -->
+        <env name="DB_CONNECTION" value="testing"/><!-- Ensure testing db connection is used -->
         <env name="MAIL_MAILER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        
+        <!-- Tenancy Configuration for Tests -->
+        <env name="TENANCY_CENTRAL_DOMAINS" value="manage.test"/>
     </php>
 </phpunit>

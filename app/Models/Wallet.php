@@ -2,15 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Wallet extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'tenant_id',
         'user_id',
+        'tenant_id',
         'balance',
     ];
     
@@ -46,13 +49,20 @@ class Wallet extends Model
     
     public function deposit(float $amount, array $attributes = [])
     {
+        $balance_before_this_transaction = $this->balance;
         $this->balance += $amount;
         $this->save();
         
-        return $this->transactions()->create(array_merge([
+        $transaction_data = [
+            'tenant_id' => $this->tenant_id,
+            'user_id' => $this->user_id,
             'amount' => $amount,
             'type' => 'deposit',
-        ], $attributes));
+            'balance_before' => $balance_before_this_transaction,
+            'balance_after' => $this->balance,
+        ];
+
+        return $this->transactions()->create(array_merge($transaction_data, $attributes));
     }
     
     public function withdraw(float $amount, array $attributes = [])
@@ -61,13 +71,23 @@ class Wallet extends Model
             throw new \Exception('Insufficient funds');
         }
         
+        $balance_before_this_transaction = $this->balance;
         $this->balance -= $amount;
         $this->save();
         
-        return $this->transactions()->create(array_merge([
-            'amount' => -1 * $amount,
-            'type' => 'withdrawal',
-        ], $attributes));
+        $transaction_type = $attributes['type'] ?? 'withdrawal';
+        unset($attributes['type']); 
+
+        $transaction_data = [
+            'tenant_id' => $this->tenant_id,
+            'user_id' => $this->user_id,
+            'amount' => -1 * $amount, 
+            'type' => $transaction_type,
+            'balance_before' => $balance_before_this_transaction,
+            'balance_after' => $this->balance,
+        ];
+
+        return $this->transactions()->create(array_merge($transaction_data, $attributes));
     }
     
     public function canAfford(float $amount): bool

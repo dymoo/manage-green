@@ -46,31 +46,55 @@ trait HasTenantPermissions
             $tenant = app('currentTenant');
         }
         
-        // If no tenant specified and no current tenant, use global role assignment
-        if (!$tenant) {
-            return $this->spatieAssignRole(...$roles);
-        }
-        
-        $tenantId = $tenant->id;
-        
-        $roles = collect($roles)
+        $processedRoles = collect($roles)
             ->flatten()
-            ->map(function ($role) use ($tenantId) {
+            ->map(function ($role) {
                 if (empty($role)) {
                     return false;
                 }
-
-                $role = $this->getStoredRole($role);
-                
-                // Update model_has_roles with tenant_id
-                $this->roles()->attach($role->id, ['tenant_id' => $tenantId]);
-                
-                return $role;
+                return $this->getStoredRole($role);
             })
             ->filter(function ($role) {
                 return $role !== false;
-            });
+            })
+            ->unique('id');
 
+        if ($processedRoles->isEmpty()) {
+            return $this;
+        }
+
+        // If no tenant specified and no current tenant, handle global role assignment
+        if (!$tenant) {
+            // Use direct DB insert for global roles to bypass potential attach issues
+            $modelType = get_class($this);
+            $modelId = $this->getKey();
+            $pivotTable = config('permission.table_names.model_has_roles');
+            
+            $insertData = $processedRoles->map(function ($role) use ($modelType, $modelId) {
+                return [
+                    'role_id' => $role->id,
+                    'model_type' => $modelType,
+                    'model_id' => $modelId,
+                    'team_id' => null, // Explicitly null
+                ];
+            })->all();
+            
+            if (!empty($insertData)) {
+                DB::table($pivotTable)->insert($insertData);
+            }
+            
+            // We might need to call $this->forgetCachedPermissions(); here if Spatie's cache doesn't pick this up.
+            return $this;
+        }
+        
+        // Handle tenant-specific role assignment
+        $tenantId = $tenant->id;
+        $attachData = $processedRoles->mapWithKeys(function ($role) use ($tenantId) {
+            return [$role->id => ['team_id' => $tenantId]];
+        })->all();
+        $this->roles()->attach($attachData);
+        // We might need to call $this->forgetCachedPermissions(); here.
+        
         return $this;
     }
 
@@ -195,7 +219,7 @@ trait HasTenantPermissions
         $count = DB::table($pivotTable)
             ->where('model_type', $modelType)
             ->where('model_id', $modelId)
-            ->where('tenant_id', $tenantId)
+            ->where(config('permission.column_names.team_foreign_key'), $tenantId)
             ->whereIn('role_id', $roleIds)
             ->count();
             

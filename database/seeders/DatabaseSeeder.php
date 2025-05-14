@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
@@ -35,7 +36,15 @@ class DatabaseSeeder extends Seeder
         
         // Assign super admin role (global, not tenant-specific)
         if (!$superAdmin->hasRole('super_admin')) {
+            if (DB::connection()->getDriverName() === 'sqlite') {
+                DB::statement('PRAGMA foreign_keys=OFF;');
+            }
+            
             $superAdmin->assignRole('super_admin');
+            
+            if (DB::connection()->getDriverName() === 'sqlite') {
+                DB::statement('PRAGMA foreign_keys=ON;');
+            }
         }
         
         // Create or find the tenant
@@ -81,33 +90,34 @@ class DatabaseSeeder extends Seeder
         );
         
         // Associate users with the tenant if they aren't already
-        if (!$tenant->users()->where('user_id', $admin->id)->exists()) {
+        if ($admin->exists && !$tenant->users()->where('user_id', $admin->id)->exists()) {
             $tenant->users()->attach($admin->id);
         }
         
-        if (!$tenant->users()->where('user_id', $staff->id)->exists()) {
+        if ($staff->exists && !$tenant->users()->where('user_id', $staff->id)->exists()) {
             $tenant->users()->attach($staff->id);
         }
         
-        if (!$tenant->users()->where('user_id', $member->id)->exists()) {
+        if ($member->exists && !$tenant->users()->where('user_id', $member->id)->exists()) {
             $tenant->users()->attach($member->id);
         }
         
         // Also allow super admin to access all tenants
-        if (!$tenant->users()->where('user_id', $superAdmin->id)->exists()) {
+        if ($superAdmin->exists && !$tenant->users()->where('user_id', $superAdmin->id)->exists()) {
             $tenant->users()->attach($superAdmin->id);
         }
         
         // Assign tenant-specific roles if they don't have them already
-        if (!$admin->hasRole('admin', $tenant)) {
+        // Restore tenant role assignments
+        if ($admin->exists && !$admin->hasRole('admin', $tenant)) {
             $admin->assignRole('admin', $tenant);
         }
         
-        if (!$staff->hasRole('staff', $tenant)) {
+        if ($staff->exists && !$staff->hasRole('staff', $tenant)) {
             $staff->assignRole('staff', $tenant);
         }
         
-        if (!$member->hasRole('member', $tenant)) {
+        if ($member->exists && !$member->hasRole('member', $tenant)) {
             $member->assignRole('member', $tenant);
         }
         

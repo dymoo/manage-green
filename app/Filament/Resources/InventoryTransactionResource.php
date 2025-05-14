@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\InventoryTransactionResource\Pages;
+use App\Filament\Resources\InventoryTransactionResource\Widgets;
 use App\Models\InventoryTransaction;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -116,6 +117,11 @@ class InventoryTransactionResource extends Resource
                     ->label('Staff')
                     ->searchable(),
                     
+                Tables\Columns\TextColumn::make('order.user.name')
+                    ->label('Member')
+                    ->searchable()
+                    ->toggleable(),
+                    
                 Tables\Columns\TextColumn::make('reference')
                     ->label('Reference')
                     ->searchable(),
@@ -176,6 +182,13 @@ class InventoryTransactionResource extends Resource
         return [
             'index' => Pages\ListInventoryTransactions::route('/'),
             'view' => Pages\ViewInventoryTransaction::route('/{record}'),
+        ];
+    }
+    
+    public static function getWidgets(): array
+    {
+        return [
+            Widgets\DailyDiscrepancyReport::class,
         ];
     }
 } 

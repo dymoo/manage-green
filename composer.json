@@ -16,6 +16,8 @@
         "laravel/tinker": "^2.10.1",
         "livewire/flux": "^2.0",
         "livewire/volt": "^1.7.0",
+        "maatwebsite/excel": "*",
+        "spatie/laravel-multitenancy": "*",
         "spatie/laravel-permission": "^6.16",
         "symfony/postmark-mailer": "^7.2"
     },

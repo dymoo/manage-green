@@ -1,0 +1,98 @@
+<?php
+
+use App\Models\User; // Assuming User model exists
+use App\Models\Tenant; // Assuming Tenant model exists
+use App\Providers\Filament\AdminPanelProvider; // Assuming standard Filament provider
+use Database\Factories\TenantFactory;
+use Database\Factories\UserFactory;
+use Filament\Facades\Filament;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role; // Assuming spatie/laravel-permission
+
+uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    $this->setUp(); // Use the base TenantTestCase setup
+    
+    // Establish Filament context for the tenant and panel
+    // This might be needed before interacting with Livewire components directly
+    Filament::setTenant($this->tenant);
+    Filament::getPanel('admin')->activate(); // Activate the desired panel
+});
+
+test('admin can invite staff', function () {
+    $this->actingAs($this->adminUser);
+    $emailToInvite = 'staff.member@example.com';
+
+    Livewire::test(StaffInvitationForm::class) // Assuming a component for this
+        ->fill([
+            'email' => $emailToInvite,
+        ])
+        ->call('submit') // Assuming the submit method name
+        ->assertHasNoErrors();
+
+    // Assert an invitation record was created (if using an invitations table)
+    $this->assertDatabaseHas('staff_invitations', [ // Replace with your actual table
+        'tenant_id' => $this->tenant->id,
+        'email' => $emailToInvite,
+    ]);
+
+    // Assert an email was sent (optional)
+    // Mail::assertSent(StaffInvitationMail::class, fn ($mail) => $mail->hasTo($emailToInvite));
+});
+
+test('invited staff can register', function () {
+    // Simulate creating an invitation
+    $invitation = StaffInvitation::create([ // Replace with your invitation model
+        'tenant_id' => $this->tenant->id,
+        'email' => 'invited.staff@example.com',
+        'token' => Str::random(32), // Generate a unique token
+    ]);
+
+    // Simulate visiting the registration link
+    // Replace 'invitation.register' with the actual route name and parameters
+    // $response = $this->get(route('invitation.register', ['token' => $invitation->token]));
+    // $response->assertOk();
+    // $response->assertSeeLivewire(RegisterStaffForm::class); // Assuming a registration component
+    
+    // Test the registration Livewire component directly
+    Livewire::test(RegisterStaffForm::class, ['token' => $invitation->token]) // Pass token if needed
+        ->fill([
+            'name' => 'Invited Staff',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ])
+        ->call('register') // Assuming the registration method name
+        ->assertHasNoErrors();
+        // ->assertRedirect(route('filament.admin.pages.dashboard', ['tenant' => $this->tenant])); // Assert redirect
+
+    // Assert the user was created and linked to the tenant
+    $newUser = User::where('email', $invitation->email)->first();
+    expect($newUser)->not->toBeNull();
+    $this->assertDatabaseHas('tenant_user', [
+        'tenant_id' => $this->tenant->id,
+        'user_id' => $newUser->id,
+    ]);
+    expect($newUser->hasRole('staff', $this->tenant))->toBeTrue();
+
+    // Assert the invitation was deleted or marked as used
+    $this->assertDatabaseMissing('staff_invitations', ['id' => $invitation->id]);
+});
+
+test('staff cannot access admin-only areas', function () {
+    // Create a staff user
+    $staffUser = $this->createStaffUser(); // Uses helper from TenantTestCase
+    $this->actingAs($staffUser);
+
+    // Attempt to access an admin-only page/resource
+    // Example: Tenant settings page
+    $url = EditTenantProfile::getUrl(tenant: $this->tenant);
+    $response = $this->get($url);
+    $response->assertForbidden();
+
+    // Example: Accessing a User Resource list (assuming staff don't have permission)
+    // $response = $this->get(UserResource::getUrl('index', panel: 'admin', tenant: $this->tenant));
+    // $response->assertForbidden();
+});
+
+// Add more tests for removing staff, role changes, etc.
