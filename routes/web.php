@@ -62,6 +62,15 @@ Route::get('/admin/tenants', function () {
     return Redirect::to('/admin/tenants-overview');
 });
 
+// Add route to handle tenant-specific dashboard access
+Route::get('/admin/tenants/{tenant}', function (string $tenant) {
+    // Find the tenant
+    $tenantModel = Tenant::where('slug', $tenant)->firstOrFail();
+    
+    // Redirect to the admin dashboard with the tenant context
+    return redirect('/admin');
+})->middleware(['auth']);
+
 // Add a named route for login to satisfy the Authenticate middleware
 Route::get('/login', function () {
     return redirect('/admin/login');

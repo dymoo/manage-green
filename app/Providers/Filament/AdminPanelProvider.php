@@ -101,7 +101,7 @@ class AdminPanelProvider extends PanelProvider
                 MenuItem::make()
                     ->label('Dashboard')
                     ->icon('heroicon-o-home')
-                    ->url(fn (): string => Pages\Dashboard::getUrl()),
+                    ->url(fn (): string => '/' . config('filament.path') . '/'),
                 MenuItem::make()
                     ->label('Club Settings')
                     ->icon('heroicon-o-cog-6-tooth')

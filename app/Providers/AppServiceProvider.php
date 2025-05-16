@@ -27,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
         
         // Add back the redirection for tenants
         Route::get('/admin/tenants', function () {
-            return redirect('/admin');
+            return redirect('/admin/tenants-overview');
         })->name('filament.admin.pages.tenants');
 
         if ($this->app->environment('production')) {
