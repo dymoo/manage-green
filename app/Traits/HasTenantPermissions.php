@@ -75,7 +75,7 @@ trait HasTenantPermissions
                     'role_id' => $role->id,
                     'model_type' => $modelType,
                     'model_id' => $modelId,
-                    'team_id' => null, // Explicitly null
+                    'tenant_id' => null, // Use tenant_id column instead of team_id
                 ];
             })->all();
             
@@ -90,7 +90,7 @@ trait HasTenantPermissions
         // Handle tenant-specific role assignment
         $tenantId = $tenant->id;
         $attachData = $processedRoles->mapWithKeys(function ($role) use ($tenantId) {
-            return [$role->id => ['team_id' => $tenantId]];
+            return [$role->id => ['tenant_id' => $tenantId]]; // Use tenant_id column instead of team_id
         })->all();
         $this->roles()->attach($attachData);
         // We might need to call $this->forgetCachedPermissions(); here.
@@ -192,12 +192,18 @@ trait HasTenantPermissions
 
         foreach ($roles as $role) {
             if (is_string($role)) {
-                $role = $roleClass::where('name', $role)->first();
+                $role = $roleClass::where([
+                    'name' => $role,
+                    'tenant_id' => $tenantId
+                ])->first();
                 if (!$role) {
                     continue;
                 }
             } elseif (is_numeric($role)) {
-                $role = $roleClass::find($role);
+                $role = $roleClass::where([
+                    'id' => $role,
+                    'tenant_id' => $tenantId
+                ])->first();
                 if (!$role) {
                     continue;
                 }
@@ -219,7 +225,7 @@ trait HasTenantPermissions
         $count = DB::table($pivotTable)
             ->where('model_type', $modelType)
             ->where('model_id', $modelId)
-            ->where(config('permission.column_names.team_foreign_key'), $tenantId)
+            ->where('tenant_id', $tenantId) // Use tenant_id directly
             ->whereIn('role_id', $roleIds)
             ->count();
             

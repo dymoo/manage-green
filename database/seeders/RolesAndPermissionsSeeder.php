@@ -71,8 +71,16 @@ class RolesAndPermissionsSeeder extends Seeder
         // Define Roles
         // Super Admin Role - has tenant_id = null implicitly by not setting it.
         $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
+        
+        // Get all tenants and create tenant-specific roles for each one
+        $tenants = Tenant::all();
+
+        foreach ($tenants as $tenant) {
+            $this->seedTenantRoles($tenant, $permissions);
+        }
+        
+        // Ensure we also have global role definitions for new tenant creation
         // Tenant specific roles - these are globally defined role names.
-        // Actual assignment to users makes them tenant-specific in practice.
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $staffRole = Role::firstOrCreate(['name' => 'staff']);
         $memberRole = Role::firstOrCreate(['name' => 'member']);
@@ -114,6 +122,73 @@ class RolesAndPermissionsSeeder extends Seeder
             'manage_member_wallet', // For POS transactions, should be scoped in code
             'view_own_sales_logs',
             'view_any_member', // To search and select members in POS
+        ]);
+
+        // Member Role Permissions
+        $memberRole->syncPermissions([
+            'access_member_portal',
+            'view_own_profile',
+            'view_own_wallet_balance',
+            'view_own_purchase_history',
+        ]);
+    }
+    
+    /**
+     * Create tenant-specific roles and assign permissions
+     */
+    private function seedTenantRoles(Tenant $tenant, array $permissions): void
+    {
+        // Create tenant-specific roles with tenant_id set
+        $adminRole = Role::firstOrCreate([
+            'name' => 'admin',
+            'tenant_id' => $tenant->id,
+            'guard_name' => 'web',
+        ]);
+        
+        $staffRole = Role::firstOrCreate([
+            'name' => 'staff',
+            'tenant_id' => $tenant->id,
+            'guard_name' => 'web',
+        ]);
+        
+        $memberRole = Role::firstOrCreate([
+            'name' => 'member',
+            'tenant_id' => $tenant->id,
+            'guard_name' => 'web',
+        ]);
+        
+        // Admin Role Permissions
+        $adminRole->syncPermissions([
+            'access_tenant_admin_panel',
+            'manage_club_settings',
+            'invite_staff',
+            'manage_staff_permissions',
+            'view_any_staff', 'create_staff', 'edit_staff', 'delete_staff',
+            'view_any_member', 'create_member', 'edit_member', 'delete_member',
+            'approve_member_registration',
+            'assign_member_fob_id',
+            'manage_member_wallet',
+            'manage_inventory',
+            'view_inventory_levels',
+            'perform_stock_checks',
+            'track_inventory_discrepancies',
+            'access_pos_system',
+            'generate_tenant_reports',
+            'view_tenant_sales_logs',
+            'view_staff_activity_logs',
+        ]);
+
+        // Staff Role Permissions
+        $staffRole->syncPermissions([
+            'access_tenant_admin_panel',
+            'access_pos_system',
+            'perform_stock_checks',
+            'view_inventory_levels',
+            'create_member',
+            'assign_member_fob_id',
+            'manage_member_wallet',
+            'view_own_sales_logs',
+            'view_any_member',
         ]);
 
         // Member Role Permissions

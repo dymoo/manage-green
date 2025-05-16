@@ -53,16 +53,14 @@ class WalletStatsWidget extends BaseWidget
                 ->descriptionIcon('heroicon-m-credit-card')
                 ->color('primary'),
             
-            Stat::make('Total Balance', number_format($totalBalance, 2))
+            Stat::make('Total Balance', ($tenant->currency ?? '€') . ' ' . number_format($totalBalance, 2))
                 ->description('Combined wallet balance')
                 ->descriptionIcon('heroicon-m-banknotes')
-                ->prefix($tenant->currency ?? '€')
                 ->color('success'),
             
-            Stat::make('Today\'s Deposits', number_format($todayDeposits, 2))
+            Stat::make('Today\'s Deposits', ($tenant->currency ?? '€') . ' ' . number_format($todayDeposits, 2))
                 ->description('Funds added today')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
-                ->prefix($tenant->currency ?? '€')
                 ->color('success'),
         ];
     }

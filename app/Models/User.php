@@ -242,16 +242,14 @@ class User extends Authenticatable implements FilamentUser, HasTenants, HasDefau
         // The first array is for matching attributes (usually empty for HasOne as it's keyed by user_id).
         // The second array is for attributes if the wallet needs to be created.
         $wallet = $this->wallet()->firstOrCreate([], [
-            'balance' => 0, // Default balance, assumed to be in cents.
-            // If your Wallet model has a tenant_id, and it's not automatically
-            // handled by observers or model events based on the user, you might add:
-            // 'tenant_id' => $this->tenant_id,
+            'balance' => 0.00, // Default balance as decimal
+            'tenant_id' => $this->tenant_id, // Ensure tenant_id is set from the user
         ]);
 
         // Ensure the relationship is loaded on the current model instance if it was just created
         // and not already loaded.
         if (!$this->relationLoaded('wallet')) {
-            $this->load('wallet');
+            $this->setRelation('wallet', $wallet);
         }
         
         return $wallet;

@@ -15,10 +15,16 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
+        // For super admins, always allow access
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
         // Only allow access if within a tenant context
         if (! $tenant = Filament::getTenant()) {
             return false;
         }
+        
         // Allow admin or staff
         return $user->hasAnyRole(['admin', 'staff'], $tenant);
     }
@@ -28,13 +34,20 @@ class UserPolicy
      */
     public function view(User $user, User $model): bool
     {
+        // For super admins, always allow access
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
         if (! $tenant = Filament::getTenant()) {
             return false;
         }
+        
         // Check if the model being viewed belongs to the same tenant
         if ($model->tenant_id !== $tenant->id) {
             return false;
         }
+        
         // Allow admin or staff to view users in their tenant
         return $user->hasAnyRole(['admin', 'staff'], $tenant);
     }
@@ -44,9 +57,15 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
+        // For super admins, always allow access
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
         if (! $tenant = Filament::getTenant()) {
             return false;
         }
+        
         // Allow admin or staff
         return $user->hasAnyRole(['admin', 'staff'], $tenant);
     }
@@ -56,13 +75,20 @@ class UserPolicy
      */
     public function update(User $user, User $model): bool
     {
+        // For super admins, always allow access
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
         if (! $tenant = Filament::getTenant()) {
             return false;
         }
+        
         // Check if the model being updated belongs to the same tenant
         if ($model->tenant_id !== $tenant->id) {
             return false;
         }
+        
         // Allow admin or staff to update users in their tenant
         return $user->hasAnyRole(['admin', 'staff'], $tenant);
     }
@@ -72,11 +98,19 @@ class UserPolicy
      */
     public function delete(User $user, User $model): bool
     {
-         if (! $tenant = Filament::getTenant()) {
+         // For super admins, always allow access
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        if (! $tenant = Filament::getTenant()) {
             return false;
         }
+        
         // Admins can delete any user within the tenant (except themselves?)
-        return $user->hasRole('admin', $tenant) && $model->tenant_id === $tenant->id && $user->id !== $model->id;
+        return $user->hasRole('admin', $tenant) && 
+               $model->tenant_id === $tenant->id && 
+               $user->id !== $model->id;
     }
 
     /**
@@ -84,9 +118,15 @@ class UserPolicy
      */
     public function restore(User $user, User $model): bool
     {
+        // For super admins, always allow access
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
         if (! $tenant = Filament::getTenant()) {
             return false;
         }
+        
         return $user->hasRole('admin', $tenant) && $model->tenant_id === $tenant->id;
     }
 
@@ -95,9 +135,17 @@ class UserPolicy
      */
     public function forceDelete(User $user, User $model): bool
     {
+        // For super admins, always allow access
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
         if (! $tenant = Filament::getTenant()) {
             return false;
         }
-        return $user->hasRole('admin', $tenant) && $model->tenant_id === $tenant->id && $user->id !== $model->id;
+        
+        return $user->hasRole('admin', $tenant) && 
+               $model->tenant_id === $tenant->id && 
+               $user->id !== $model->id;
     }
 }

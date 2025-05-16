@@ -22,40 +22,96 @@ class TenantTestCase extends TestCase
     {
         parent::setUp(); // Call Laravel's base setup first
 
-        // Create roles needed for tests AFTER parent::setUp()
-        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-        Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
-        Role::firstOrCreate(['name' => 'member', 'guard_name' => 'web']);
+        // Create the tenant
+        $this->tenant = Tenant::factory()->create();
+
+        // Create roles needed for tests AFTER parent::setUp() and tenant creation
+        // These roles should be tenant-specific by adding tenant_id
+        $adminRole = Role::firstOrCreate([
+            'name' => 'admin',
+            'guard_name' => 'web',
+            'tenant_id' => $this->tenant->id, // Associate role with tenant
+        ]);
+        
+        $staffRole = Role::firstOrCreate([
+            'name' => 'staff',
+            'guard_name' => 'web',
+            'tenant_id' => $this->tenant->id, // Associate role with tenant
+        ]);
+        
+        $memberRole = Role::firstOrCreate([
+            'name' => 'member',
+            'guard_name' => 'web',
+            'tenant_id' => $this->tenant->id, // Associate role with tenant
+        ]);
 
         // Clear permission cache after creating roles
         $this->app->make(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        // Create the tenant
-        $this->tenant = Tenant::factory()->create();
-
-        // Create a default admin user for the tenant and authenticate
-        $this->adminUser = User::factory()->admin($this->tenant)->create();
-        $this->actingAs($this->adminUser); // Authenticate BEFORE setting tenant context
+        // Create a default admin user for the tenant
+        $this->adminUser = User::factory()->create([
+            'tenant_id' => $this->tenant->id,
+        ]);
+        
+        // Associate admin with tenant and roles using actual model relationships
+        $this->adminUser->tenants()->attach($this->tenant->id);
+        $this->adminUser->roles()->attach($adminRole->id, [
+            'model_type' => User::class,
+            'team_id' => $this->tenant->id, // Set team_id (used by Spatie Permission)
+            'tenant_id' => $this->tenant->id, // Set tenant_id (custom field)
+        ]);
+        
+        // Authenticate as admin
+        $this->actingAs($this->adminUser);
 
         // Set the current tenant for Filament AFTER authentication
         Filament::setTenant($this->tenant);
-
-        // Create other default users (optional, can be done in specific tests)
-        // $this->staffUser = $this->createStaffUser(); 
-        // $this->memberUser = $this->createMemberUser();
     }
 
     // Helper method to create a staff user for the current tenant
     protected function createStaffUser(): User
     {
-        // The staff() state in UserFactory handles role creation/assignment and tenant association.
-        return User::factory()->staff($this->tenant)->create();
+        $staffRole = Role::where([
+            'name' => 'staff',
+            'tenant_id' => $this->tenant->id,
+        ])->first();
+        
+        $user = User::factory()->create([
+            'tenant_id' => $this->tenant->id,
+        ]);
+        
+        $user->tenants()->attach($this->tenant->id);
+        $user->roles()->attach($staffRole->id, [
+            'model_type' => User::class,
+            'team_id' => $this->tenant->id,
+            'tenant_id' => $this->tenant->id,
+        ]);
+        
+        return $user;
     }
 
      // Helper method to create a member user for the current tenant
     protected function createMemberUser(): User
     {
-        // The member() state in UserFactory handles role creation/assignment and tenant association.
-        return User::factory()->member($this->tenant)->create();
+        $memberRole = Role::where([
+            'name' => 'member',
+            'tenant_id' => $this->tenant->id,
+        ])->first();
+        
+        $user = User::factory()->create([
+            'tenant_id' => $this->tenant->id,
+        ]);
+        
+        $user->tenants()->attach($this->tenant->id);
+        $user->roles()->attach($memberRole->id, [
+            'model_type' => User::class,
+            'team_id' => $this->tenant->id,
+            'tenant_id' => $this->tenant->id,
+        ]);
+        
+        // Create wallet for the member
+        $user->ensureWalletExists();
+        
+        return $user;
     }
 } 
